@@ -6,8 +6,8 @@ from random import randint
 class LivreService():
 
     def seed_livre_from_csv(self, csv_path, batch_size=500):
-        connection = db()
-        cursor = connection.cursor()
+        conn = db()
+        cursor = conn.cursor()
 
         batch = []
 
@@ -29,9 +29,9 @@ class LivreService():
             if batch:
                 self._insert_batch(cursor, batch)
 
-        connection.commit()
+        conn.commit()
         cursor.close()
-        connection.close()
+        conn.close()
         print(f"Seeded books from {csv_path}.")
 
     def _insert_batch(self, cursor, batch):

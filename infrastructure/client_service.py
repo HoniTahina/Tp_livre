@@ -1,10 +1,13 @@
 
 import random
-
+from db.oracle import db
 
 class ClientService():
-    
-    def gen_name():
+    def __init__(self):
+        self.conn = db()
+        self.cursor = self.conn.cursor()
+
+    def gen_name(self):
         tab_name =['Dupond','Joe','Marie','Sophie','Martin','Lucas','Emma','Paul','Lina','Adam',
         'Chloe','Noah','Lea','Hugo','Nina','Thomas','Eva','Yanis','Sarah','Leo',
         'Julie','Omar','Clara','Moussa','Victor','Amina','Bastien','Ines','Kylian',
@@ -32,14 +35,14 @@ class ClientService():
         print (name)
         return name
 
-    def gen_num():
+    def gen_num(self):
         start = random.choice(["06", "07"])
         nums = [str(random.randint(0, 9)) for _ in range(8)]
         tel = f"{start}{nums[0]}{nums[1]}{nums[2]}{nums[3]}{nums[4]}{nums[5]}{nums[6]}{nums[7]}"
         print (tel)
         return tel
 
-    def gen_email(name):
+    def gen_email(self, name):
         ext = ['@gmail.com', '@hotmail.fr', 'yahoo.fr']
         name = f"{name}{random.randint(0,99)}"
         name = name.replace(" ", "")
@@ -47,20 +50,68 @@ class ClientService():
         print (mail)
         return mail
 
-    def _insert_client(self, cursor, client):
-        cursor.executemany("""
+    def _insert_client(self, clients):
+        self.cursor.executemany("""
             INSERT INTO clients (
                nom, email, tel
             ) VALUES (:1, :2, :3)
-        """, client)
+        """, clients)
 
-    clients = []
-    for i in range(0,2):
-        name = gen_name()
-        clients.append((
-            name,
-            gen_email(name),
-            gen_num()
-        ))
-    print (clients)
- 
+    def seed(self, count=10):
+        clients = []
+        for _ in range(count):
+            name = self.gen_name()
+            clients.append((
+                name,
+                self.gen_email(name),
+                self.gen_num()
+            ))
+
+        self._insert_client(clients)
+        self.conn.commit()
+        print(f'✔ Seeded {count} clients')
+    
+    def creer_utilisateur(self, nom, email, tel=""):
+        try:
+            self.cursor.execute("""
+                INSERT INTO clients (nom, email, tel)
+                VALUES (:nom, :email, :tel)
+                RETURNING id INTO :new_id
+            """, {'nom': nom, 'email': email, 'tel': tel, 'new_id': self.cursor.var(int)})
+            
+            new_id = self.cursor.bindvars['new_id'].getvalue()[0]
+            self.conn.commit()
+            return True, new_id, f"Utilisateur créé avec ID: {new_id}"
+        except Exception as e:
+            self.conn.rollback()
+            return False, None, str(e)
+
+    def mettre_a_jour_utilisateur(self, client_id, nom, email, tel):
+        try:
+            self.cursor.execute("""
+                UPDATE clients
+                SET nom = :nom, email = :email, tel = :tel
+                WHERE id = :client_id
+            """, {'nom': nom, 'email': email, 'tel': tel, 'client_id': client_id})
+            self.conn.commit()
+            return True, "OK"
+        except Exception as e:
+            self.conn.rollback()
+            return False, str(e)
+
+    def tous_les_clients(self):
+        self.cursor.execute("""
+            SELECT c.id, c.nom, c.email, c.tel,
+                   cm.type_id, mt.type, cm.etat,
+                   (SELECT COUNT(*) FROM location_livre 
+                    WHERE client_id = c.id AND date_retour IS NULL) as active_loans
+            FROM clients c
+            LEFT JOIN carte_membre cm ON c.id = cm.client_id AND cm.etat = 1
+            LEFT JOIN member_type mt ON cm.type_id = mt.id
+            ORDER BY c.id DESC
+        """)
+        return self.cursor.fetchall()
+
+    def close(self):
+        self.cursor.close()
+        self.conn.close()
