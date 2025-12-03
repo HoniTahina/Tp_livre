@@ -27,7 +27,7 @@ CREATE TABLE carte_membre(
     date_creation DATE NOT NULL,
     client_id NUMBER NOT NULL,
     type_id NUMBER NOT NULL,
-    etat TINYINT,
+    etat NUMBER(1) NOT NULL CHECK  (etat in (0,1)),
     FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
 );
 
