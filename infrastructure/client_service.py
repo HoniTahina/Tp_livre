@@ -47,10 +47,11 @@ class ClientService():
         mail = f"{name}{random.choice(ext)}"
         return mail
 
-    def insert (self, clients):
+    def insert (self, clients,carte):
         connection = db()
         cursor = connection.cursor()
         self._insert_client(cursor, clients)
+        self._insert_carte(cursor,carte)
         print('insertion success')
         connection.commit()
         cursor.close()
@@ -63,8 +64,27 @@ class ClientService():
             ) VALUES (:1, :2, :3)
         """, client)
 
+    def _insert_carte(self, cursor, carte):
+        cursor.executemany("""
+            INSERT INTO clients (
+               date_creation, client_id, type_id, etat
+            ) VALUES (:1, :2, :3, :4)
+        """, carte)
+
+
+    carte = []
     clients = []
-    for i in range(0,2):
+    for i in range(0,499):
+        client_id = i+1
+        type_id = random.randint(1,5)
+        etat = random.randint(0,1)
+
+        carte.append((
+            client_id,
+            type_id,
+            etat
+        ))
+
         name = gen_name()
         clients.append((
             name,

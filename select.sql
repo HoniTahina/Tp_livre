@@ -1,1 +1,1 @@
-SELECT * from CLIENTS;
+SELECT * from member_type;
