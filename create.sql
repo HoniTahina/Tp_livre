@@ -41,4 +41,3 @@ CREATE TABLE location_livre(
     FOREIGN KEY (livre_id) REFERENCES livres(id)
 );
 
-

@@ -1,4 +1,7 @@
-
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from db.oracle import db
 import random
 
 
@@ -29,14 +32,12 @@ class ClientService():
         'Noura','Oualid','Penda','Rokhaya','Souleymane','Tidiane','Ugo','Viviane','Wassim','Yara'
         ]
         name = (f"{random.choice(tab_name)} {random.choice(tab_firstname)}")
-        print (name)
         return name
 
     def gen_num():
         start = random.choice(["06", "07"])
         nums = [str(random.randint(0, 9)) for _ in range(8)]
         tel = f"{start}{nums[0]}{nums[1]}{nums[2]}{nums[3]}{nums[4]}{nums[5]}{nums[6]}{nums[7]}"
-        print (tel)
         return tel
 
     def gen_email(name):
@@ -44,8 +45,16 @@ class ClientService():
         name = f"{name}{random.randint(0,99)}"
         name = name.replace(" ", "")
         mail = f"{name}{random.choice(ext)}"
-        print (mail)
         return mail
+
+    def insert (self, clients):
+        connection = db()
+        cursor = connection.cursor()
+        self._insert_client(cursor, clients)
+        print('insertion success')
+        connection.commit()
+        cursor.close()
+        connection.close()
 
     def _insert_client(self, cursor, client):
         cursor.executemany("""
@@ -63,4 +72,6 @@ class ClientService():
             gen_num()
         ))
     print (clients)
+    
+
  
