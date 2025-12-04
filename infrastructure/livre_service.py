@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from db.oracle import db
 import csv
 from random import randint
@@ -40,3 +43,4 @@ class LivreService():
                titre, auteur, publication_date, stock
             ) VALUES (:1, :2, :3, :4)
         """, batch)
+
