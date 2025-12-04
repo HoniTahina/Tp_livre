@@ -1,3 +1,4 @@
+from datetime import datetime 
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -6,8 +7,11 @@ import random
 
 
 class ClientService():
+    def __init__(self):
+        self.conn = db()
+        self.cursor = self.conn.cursor()
     
-    def gen_name():
+    def gen_name(self):
         tab_name =['Dupond','Joe','Marie','Sophie','Martin','Lucas','Emma','Paul','Lina','Adam',
         'Chloe','Noah','Lea','Hugo','Nina','Thomas','Eva','Yanis','Sarah','Leo',
         'Julie','Omar','Clara','Moussa','Victor','Amina','Bastien','Ines','Kylian',
@@ -34,13 +38,13 @@ class ClientService():
         name = (f"{random.choice(tab_name)} {random.choice(tab_firstname)}")
         return name
 
-    def gen_num():
+    def gen_num(self):
         start = random.choice(["06", "07"])
         nums = [str(random.randint(0, 9)) for _ in range(8)]
         tel = f"{start}{nums[0]}{nums[1]}{nums[2]}{nums[3]}{nums[4]}{nums[5]}{nums[6]}{nums[7]}"
         return tel
 
-    def gen_email(name):
+    def gen_email(self,name):
         ext = ['@gmail.com', '@hotmail.fr', 'yahoo.fr']
         name = f"{name}{random.randint(0,99)}"
         name = name.replace(" ", "")
@@ -66,32 +70,35 @@ class ClientService():
 
     def _insert_carte(self, cursor, carte):
         cursor.executemany("""
-            INSERT INTO clients (
+            INSERT INTO carte_membre (
                date_creation, client_id, type_id, etat
             ) VALUES (:1, :2, :3, :4)
         """, carte)
 
+    def seed_client(self):
 
-    carte = []
-    clients = []
-    for i in range(0,499):
-        client_id = i+1
-        type_id = random.randint(1,5)
-        etat = random.randint(0,1)
+        carte = []
+        clients = []
+        for i in range(1,500):
+            client_id = i
+            type_id = random.randint(1,5)
+            etat = 1
 
-        carte.append((
-            client_id,
-            type_id,
-            etat
-        ))
+            carte.append((
+                datetime.now(),
+                client_id,
+                type_id,
+                etat
+            ))
 
-        name = gen_name()
-        clients.append((
-            name,
-            gen_email(name),
-            gen_num()
-        ))
-    print (clients)
+            name = self.gen_name()
+            clients.append((
+                name,
+                self.gen_email(name),
+                self.gen_num()
+            ))
+        self.insert(clients, carte)
+        print (clients)
     
 
  
